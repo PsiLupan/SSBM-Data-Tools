@@ -1,0 +1,95 @@
+#############################################
+Hook Stage Selection on Match Start
+---------------------------------------------
+8016E730 - Start_Melee [WParam]
+
+r31 points to 8048053C
+Offsets:
+0x0E, Stage "Selected" ID
+
+IDs:
+02 - Fountain of Dreams
+03 - Pokemon Stadium
+04 - Princess Peach's Castle
+05 - Kongo Jungle
+06 - Brinstar
+07 - Corneria
+08 - Yoshi's Story
+09 - Onett
+0A - Mute City
+0B - Rainbow Cruise
+0C - Jungle Japes
+0D - Great Bay
+0E - Temple
+0F - Brinstar Depths
+10 - Yoshi's Island
+11 - Green Greens
+12 - Fourside
+13 - Mushroom Kingdom
+14 - Mushroom Kingdom II
+16 - Venom
+17 - Poke Floats
+18 - Big Blue
+19 - Icicle Mountain
+1B - Flat Zone
+1C - Dreamland
+1D - Yoshi's Island (64)
+1E - Kongo Jungle
+1F - Battlefield
+20 - Final Destination
+
+CODE:
+
+mr r18, r3 #Move r3 to r18 for storage, since r18 is unused
+lbz r3,14(r31) #Load stage ID byte into r3
+b sendByte
+mr r3, r18 #Restore r3
+mflr r0 #Restore the replaced function
+
+#############################################
+Hook Character Selections on Match Start
+---------------------------------------------
+80068E98 - AllocAndInitPlayer [WParam]
+
+r30 points to single character block
+Offsets:
+0x04, Character "Selected" ID
+
+mr r18, r3 #Move r3 to r18 for storage, since r18 is unused
+lbz r3,4(r31) #Load character ID byte into r3
+b sendByte
+mr r3, r18  #Restore r3
+mflr r0 #Restore the replaced function
+
+
+##############################################
+Send EXI
+----------------------------------------------
+
+CODE:
+
+sendByte:
+lis r11, 0xCC00
+li r10, 0xD0
+li r9, 0x5
+stw    r10, 0x6814(r11) #start transfer, write to CH1 Param Register
+
+writeByte:
+lbz r5, 0(r3) #write byte at r3 to r5
+slwi r5, r5, 24 #Left Shift by 24, since we don't append an ID
+stw r5, 0x6824(r11) #store r5 into CH1 IMM register
+stw r9, 0x6820(r11) #Set write IMM on CH1 Control Register
+
+exicheckreceivewait:              
+lwz    r8, 0x6820(r11)
+andi.  r8, r8, 1 #Check if TSTART = 0 for transfer complete
+bne    exicheckreceivewait # while((exi_chan1cr)&1);
+
+stw    r8, 0x6814(r11) #Write 0 to Param for later reinit
+blr
+
+########################################################
+GECKO CODE
+--------------------------------------------------------
+
+$Game Reporter[SinsOfApathy]

@@ -1,7 +1,6 @@
 package dgecko;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -15,24 +14,77 @@ public class DolphinGecko {
 		CONNECTED, 
 		DISCONNECT
 	}
-	Status status = Status.CONNECT;
+	Status statusMajor = Status.CONNECT;
 	
-	DolphinGecko() throws UnknownHostException, IOException{	
+	private enum GameStatus{
+		START_MATCH,
+		SEL_MAP,
+		SEL_CHARS_AMOUNT,
+		SEL_CHARS,
+		IN_MATCH,
+		END_MATCH;
+	}
+	GameStatus statusMinor = GameStatus.START_MATCH;
+	
+	private byte currMap = 0x0;
+	private byte[] characters;
+	
+	DolphinGecko() throws UnknownHostException, IOException{
+		short currChar = 0;
+		
 		while(true){
 			try{
 				Thread.sleep(5);
 			}catch(Exception e){
 			}
-			switch (status){
+			switch (statusMajor){
 				case CONNECT:
 					socket = new Socket("localhost", 55020);
 				    in = new DataInputStream(socket.getInputStream());
 					System.out.println("Connected to Dolphin");
-					status = Status.CONNECTED;
+					statusMajor = Status.CONNECTED;
 					break;
+				
 				case CONNECTED:
-					System.out.println(in.readByte());
+					byte data = in.readByte();
+					switch(statusMinor){
+						case START_MATCH:
+							if(data == (byte)0x01){
+								statusMinor = GameStatus.SEL_MAP;
+								System.out.println("Match Started");
+							}
+							break;
+						
+						case SEL_MAP:
+							currMap = data;
+							statusMinor = GameStatus.SEL_CHARS_AMOUNT;
+							System.out.println("Selected Map: " + currMap);
+							break;
+						
+						case SEL_CHARS_AMOUNT:
+							characters = new byte[data];
+							System.out.println("Number of Characters: " + currMap);
+							break;
+						
+						case SEL_CHARS:
+							if(currChar < characters.length){
+								characters[currChar] = data;
+								currChar += 1;
+							}else{
+								currChar = 0;
+								statusMinor = GameStatus.IN_MATCH;
+							}					
+							break;
+						
+						case IN_MATCH:
+							break;
+							
+						case END_MATCH:
+							currMap = 0x0;
+							break;
+					}
 					break;
+				
 				case DISCONNECT:
 					System.exit(0);
 					break;

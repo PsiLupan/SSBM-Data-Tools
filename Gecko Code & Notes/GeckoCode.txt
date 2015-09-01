@@ -51,8 +51,9 @@ IDs:
 CODE:
 
 mr r31,r3
-lbz r18,14(r3) #Load stage ID byte into r3
-b sendByte
+mflr r21
+bl sendByte
+mtlr r21
 
 #############################################
 Hook Character Selections on Match Start [SinsOfApathy]
@@ -65,10 +66,10 @@ Offsets:
 
 Free Registers: r14 - 26
 
-mr r18, r3 #Move r3 to r18 for storage, since r18 is unused
+mr r21, r3 #Move r3 to r21 for storage, since r21 is unused
 lbz r3,4(r31) #Load character ID byte into r3
-b sendByte
-mr r3, r18  #Restore r3
+bl sendByte
+mr r3, r21  #Restore r3
 mflr r0 #Restore the replaced function
 
 
@@ -79,45 +80,37 @@ Send EXI [Gecko]
 CODE:
 
 sendByte:
-lis r14, 0xCC00
+lis r16, 0xCC00
 li r15, 0xD0
-li r16, 0x5
-stw    r15, 0x6814(r11) #start transfer, write to CH1 Param Register
+li r14, 0x5
+stw r15, 0x6814(r16) #start transfer, write to CH1 Param Register
 
 writeByte:
-lbz r20, 0(r18) #write byte at r18 to r18
-slwi r20, r20, 24 #Left Shift by 24, since we don't append an ID
-stw r20, 0x6824(r14) #store r5 into CH1 IMM register
-stw r16, 0x6820(r14) #Set write IMM on CH1 Control Register
+lbz r18, 14(r3) #write byte at r3+14 to r18
+slwi r18, r18, 24 #Left Shift by 24, since we don't append an ID
+stw r18, 0x6824(r16) #store r18 into CH1 IMM register
+stw r14, 0x6820(r16) #Set write IMM on CH1 Control Register
 
 exicheckreceivewait:              
-lwz    r17, 0x6820(r11)
+lwz    r17, 0x6820(r16)
 andi.  r17, r17, 1 #Check if TSTART = 0 for transfer complete
 bne    exicheckreceivewait # while((exi_chan1cr)&1);
 
-stw    r17, 0x6814(r14) #Write 0 to Param for later reinit
+stw    r17, 0x6814(r16) #Write 0 to Param for later reinit
+blr
 
 ########################################################
 GECKO CODE
 --------------------------------------------------------
 
 $Game Reporter[SinsOfApathy]
-C216E740 00000008
-7C7F1B78 8A43000E
+C216E740 00000009
+7C7F1B78 7EA802A6
+48000009 7EA803A6
 3DC0CC00 39E000D0
 3A000005 91EB6814
-8A920000 5694C00E
-928E6824 920E6820
-822B6820 72310001
-4082FFF8 922E6814
-4E800020 00000000
-C2068E98 00000009
-7C721B78 887F0004
-3DC0CC00 39E000D0
-3A000005 91EB6814
-8A430000 5652C00E
+8A43000E 5652C00E
 924E6824 920E6820
-822B6820 72310001
+822E6820 72310001
 4082FFF8 922E6814
-7E439378 7C0802A6
 4E800020 00000000

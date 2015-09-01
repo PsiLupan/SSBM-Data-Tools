@@ -18,7 +18,6 @@ public class DolphinGecko {
 	
 	private enum GameStatus{
 		START_MATCH,
-		SEL_MAP,
 		SEL_CHARS_AMOUNT,
 		SEL_CHARS,
 		IN_MATCH,
@@ -49,21 +48,15 @@ public class DolphinGecko {
 					byte data = in.readByte();
 					switch(statusMinor){
 						case START_MATCH:
-							if(data == (byte)0x01){
-								statusMinor = GameStatus.SEL_MAP;
-								System.out.println("Match Started");
-							}
-							break;
-						
-						case SEL_MAP:
 							currMap = data;
-							statusMinor = GameStatus.SEL_CHARS_AMOUNT;
 							System.out.println("Selected Map: " + currMap);
+							statusMinor = GameStatus.SEL_CHARS_AMOUNT;
 							break;
 						
 						case SEL_CHARS_AMOUNT:
+							System.out.println("Number of Characters: " + data);
 							characters = new byte[data];
-							System.out.println("Number of Characters: " + currMap);
+							statusMinor = GameStatus.SEL_CHARS;
 							break;
 						
 						case SEL_CHARS:

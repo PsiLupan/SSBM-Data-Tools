@@ -7,6 +7,8 @@ r31 points to 8048053C
 Offsets:
 0x0E, Stage "Selected" ID
 
+Free Registers: r14 - 24
+
 IDs:
 02 - Fountain of Dreams
 03 - Pokemon Stadium
@@ -55,6 +57,8 @@ r30 points to single character block
 Offsets:
 0x04, Character "Selected" ID
 
+Free Registers: r14 - 26
+
 mr r18, r3 #Move r3 to r18 for storage, since r18 is unused
 lbz r3,4(r31) #Load character ID byte into r3
 b sendByte
@@ -69,23 +73,23 @@ Send EXI
 CODE:
 
 sendByte:
-lis r11, 0xCC00
-li r10, 0xD0
-li r9, 0x5
-stw    r10, 0x6814(r11) #start transfer, write to CH1 Param Register
+lis r14, 0xCC00
+li r15, 0xD0
+li r16, 0x5
+stw    r15, 0x6814(r11) #start transfer, write to CH1 Param Register
 
 writeByte:
-lbz r5, 0(r3) #write byte at r3 to r5
-slwi r5, r5, 24 #Left Shift by 24, since we don't append an ID
-stw r5, 0x6824(r11) #store r5 into CH1 IMM register
-stw r9, 0x6820(r11) #Set write IMM on CH1 Control Register
+lbz r18, 0(r3) #write byte at r3 to r18
+slwi r18, r18, 24 #Left Shift by 24, since we don't append an ID
+stw r18, 0x6824(r14) #store r5 into CH1 IMM register
+stw r16, 0x6820(r14) #Set write IMM on CH1 Control Register
 
 exicheckreceivewait:              
-lwz    r8, 0x6820(r11)
-andi.  r8, r8, 1 #Check if TSTART = 0 for transfer complete
+lwz    r17, 0x6820(r11)
+andi.  r17, r17, 1 #Check if TSTART = 0 for transfer complete
 bne    exicheckreceivewait # while((exi_chan1cr)&1);
 
-stw    r8, 0x6814(r11) #Write 0 to Param for later reinit
+stw    r17, 0x6814(r14) #Write 0 to Param for later reinit
 blr
 
 ########################################################

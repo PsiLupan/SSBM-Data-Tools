@@ -1,8 +1,16 @@
 #############################################
-Hook Stage Selection on Match Start
+Hook In-Match Stock Changes
+---------------------------------------------
+80033ce0 - Remove_Stock
+
+
+
+
+#############################################
+Hook Stage Selection on Match Start [SinsOfApathy]
 ---------------------------------------------
 8016E730 - Start_Melee [WParam]
-
+Inject @ 8016E740
 r31 points to 8048053C
 Offsets:
 0x0E, Stage "Selected" ID
@@ -42,14 +50,12 @@ IDs:
 
 CODE:
 
-mr r18, r3 #Move r3 to r18 for storage, since r18 is unused
-lbz r3,14(r31) #Load stage ID byte into r3
+mr r31,r3
+lbz r18,14(r3) #Load stage ID byte into r3
 b sendByte
-mr r3, r18 #Restore r3
-mflr r0 #Restore the replaced function
 
 #############################################
-Hook Character Selections on Match Start
+Hook Character Selections on Match Start [SinsOfApathy]
 ---------------------------------------------
 80068E98 - AllocAndInitPlayer [WParam]
 
@@ -67,7 +73,7 @@ mflr r0 #Restore the replaced function
 
 
 ##############################################
-Send EXI
+Send EXI [Gecko]
 ----------------------------------------------
 
 CODE:
@@ -79,9 +85,9 @@ li r16, 0x5
 stw    r15, 0x6814(r11) #start transfer, write to CH1 Param Register
 
 writeByte:
-lbz r18, 0(r3) #write byte at r3 to r18
-slwi r18, r18, 24 #Left Shift by 24, since we don't append an ID
-stw r18, 0x6824(r14) #store r5 into CH1 IMM register
+lbz r20, 0(r18) #write byte at r18 to r18
+slwi r20, r20, 24 #Left Shift by 24, since we don't append an ID
+stw r20, 0x6824(r14) #store r5 into CH1 IMM register
 stw r16, 0x6820(r14) #Set write IMM on CH1 Control Register
 
 exicheckreceivewait:              
@@ -90,10 +96,28 @@ andi.  r17, r17, 1 #Check if TSTART = 0 for transfer complete
 bne    exicheckreceivewait # while((exi_chan1cr)&1);
 
 stw    r17, 0x6814(r14) #Write 0 to Param for later reinit
-blr
 
 ########################################################
 GECKO CODE
 --------------------------------------------------------
 
 $Game Reporter[SinsOfApathy]
+C216E740 00000008
+7C7F1B78 8A43000E
+3DC0CC00 39E000D0
+3A000005 91EB6814
+8A920000 5694C00E
+928E6824 920E6820
+822B6820 72310001
+4082FFF8 922E6814
+4E800020 00000000
+C2068E98 00000009
+7C721B78 887F0004
+3DC0CC00 39E000D0
+3A000005 91EB6814
+8A430000 5652C00E
+924E6824 920E6820
+822B6820 72310001
+4082FFF8 922E6814
+7E439378 7C0802A6
+4E800020 00000000

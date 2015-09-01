@@ -26,7 +26,7 @@ public class DolphinGecko {
 			switch (status){
 				case CONNECT:
 					socket = new Socket("localhost", 55020);
-				new DataOutputStream(socket.getOutputStream());
+				    in = new DataInputStream(socket.getInputStream());
 					System.out.println("Connected to Dolphin");
 					status = Status.CONNECTED;
 					break;

@@ -50,6 +50,11 @@ IDs:
 
 CODE:
 
+lis r20, 0xCC00
+lhz r28, 0x4010(r20)
+ori r21, r28, 0xFF
+sth r21, 0x4010(r20) # disable MP3 memory protection
+
 b getStageID
 
 sendByte:
@@ -82,6 +87,7 @@ mtlr r21
 Hook Character Selections on Match Start [SinsOfApathy]
 ---------------------------------------------
 80068E98 - AllocAndInitPlayer [WParam]
+inject @ 80068E9C
 
 r30 points to single character block
 Offsets:
@@ -124,10 +130,12 @@ GECKO CODE
 --------------------------------------------------------
 
 $Game Reporter[SinsOfApathy]
-C216E740 0000000A
+C216E740 0000000C
+3E80CC00 A3944010
+639500FF B2B44010
 48000038 3E00CC00
 39E000D0 39C00005
-91F06814 8A43000E
+91F06814 8A43000F
 5652C00E 92506824
 91D06820 82306820
 72310001 4082FFF8

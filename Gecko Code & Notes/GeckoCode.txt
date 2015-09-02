@@ -50,22 +50,18 @@ IDs:
 
 CODE:
 
-lis r20, 0xCC00
-lhz r28, 0x4010(r20)
-ori r21, r28, 0xFF
-sth r21, 0x4010(r20) # disable MP3 memory protection
-
 b getStageID
 
 sendByte:
 lis r16, 0xCC00
 li r15, 0xD0
-li r14, 0x5
+li r14, 0x19
 stw r15, 0x6814(r16) #start transfer, write to CH1 Param Register
 
 writeByte:
 lbz r18, 0xF(r3) #write byte at r3+14 to r18
-slwi r18, r18, 24 #Left Shift by 24, since we don't append an ID
+slwi r18, r18, 20 #Left Shift by 24, since we don't append an ID
+oris r18, r18, 0xB000		# 0xB0000000 | (OR)
 stw r18, 0x6824(r16) #store r18 into CH1 IMM register
 stw r14, 0x6820(r16) #Set write IMM on CH1 Control Register
 
@@ -91,8 +87,7 @@ inject @ 80068E9C
 
 r30 points to single character block
 Offsets:
-0x04, Character "Selected" ID
-
+0x07, Character "Selected" ID
 Free Registers: r14 - 26
 
 b getCharID
@@ -100,12 +95,13 @@ b getCharID
 sendByte:
 lis r16, 0xCC00
 li r15, 0xD0
-li r14, 0x5
+li r14, 0x19
 stw r15, 0x6814(r16) #start transfer, write to CH1 Param Register
 
 writeByte:
 mr r11, r3 #write byte at r3 to r11
-slwi r11, r11, 24 #Left Shift by 24, since we don't append an ID
+slwi r11, r11, 20 #Left Shift by 20
+oris r11, r11, 0xB000		# 0xB0000000 | (OR)
 stw r11, 0x6824(r16) #store r18 into CH1 IMM register
 stw r14, 0x6820(r16) #Set write IMM on CH1 Control Register
 
@@ -120,7 +116,7 @@ blr
 getCharID:
 mr r20, r3 #Move r3 to r21 for storage, since r21 is unused
 li r3, 0
-lbz r3,4(r31) #Load character ID byte into r3
+lbz r3,7(r30) #Load character ID byte into r3
 bl sendByte
 mr r3, r20  #Restore r3
 li r4, 8 #Restore the replaced function
@@ -130,28 +126,26 @@ GECKO CODE
 --------------------------------------------------------
 
 $Game Reporter[SinsOfApathy]
-C216E740 0000000C
-3E80CC00 A3944010
-639500FF B2B44010
-48000038 3E00CC00
-39E000D0 39C00005
+C216E740 0000000A
+4800003C 3E00CC00
+39E000D0 39C00019
 91F06814 8A43000F
-5652C00E 92506824
-91D06820 82306820
-72310001 4082FFF8
-92306814 4E800020
-7C7F1B78 7EA802A6
-4BFFFFC5 7EA803A6
-60000000 00000000
+5652A016 6652B000
+92506824 91D06820
+82306820 72310001
+4082FFF8 92306814
+4E800020 7C7F1B78
+7EA802A6 4BFFFFC1
+7EA803A6 00000000
 C2068E9C 0000000B
-48000038 3E00CC00
-39E000D0 39C00005
-91F06814 89630000
-556BC00E 91706824
-91D06820 82306820
-72310001 4082FFF8
-92306814 4E800020
-7C741B78 38600000
-887F0004 4BFFFFC1
-7E83A378 38800008
-60000000 00000000
+4800003C 3E00CC00
+39E000D0 39C00019
+91F06814 7C6B1B78
+556BA016 656BB000
+91706824 91D06820
+82306820 72310001
+4082FFF8 92306814
+4E800020 7C741B78
+38600000 887E0007
+4BFFFFBD 7E83A378
+38800008 00000000

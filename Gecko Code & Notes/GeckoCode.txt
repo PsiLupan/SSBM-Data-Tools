@@ -2,9 +2,40 @@
 Hook In-Match Stock Changes
 ---------------------------------------------
 80033ce0 - Remove_Stock
+r0 @ 80033d44 = New Stock Count
 
+Free Registers: r19 - r23
 
+Inject @ 80033d48
 
+CODE:
+
+b getStockUpdate
+
+sendByte:
+lis r23, 0xCC00
+li r22, 0xD0
+li r21, 0x19
+stw r22, 0x6814(r16) #start transfer, write to CH1 Param Register
+
+writeByte:
+mr r19, r0 #Move stock from r0 to r19
+slwi r19, r19, 20 #Left Shift by 24, since we don't append an ID
+oris r19, r19, 0xB000		# 0xB0000000 | (OR)
+stw r19, 0x6824(r23) #store r18 into CH1 IMM register
+stw r21, 0x6820(r23) #Set write IMM on CH1 Control Register
+
+exicheckreceivewait:              
+lwz    r20, 0x6820(r23)
+andi.  r20, r20, 1 #Check if TSTART = 0 for transfer complete
+bne    exicheckreceivewait # while((exi_chan1cr)&1);
+
+stw    r20, 0x6814(r16) #Write 0 to Param for later reinit
+blr
+
+getStockUpdate:
+bl sendByte
+stb r0,0x008E(r4) #Restore old instruction
 
 #############################################
 Hook Stage Selection on Match Start [SinsOfApathy]

@@ -27,7 +27,8 @@ public class DolphinGecko {
 	GameStatus statusMinor = GameStatus.START_MATCH;
 	
 	private String currMap = "0x0";
-	private byte[] characters = new byte[4];;
+	private byte[] characters = new byte[4];
+	private byte[] stocks = new byte[4];
 	
 	DolphinGecko() throws UnknownHostException, IOException{
 		short currChar = 0;
@@ -62,15 +63,20 @@ public class DolphinGecko {
 								characters[currChar] = in_bytes[0];
 								currChar += 1;
 								if(currChar > 1){ //TODO: Add some kind of ACK to support more than 2 characters
+									currChar = 0;
 									statusMinor = GameStatus.IN_MATCH;
 								}
 								break;
 						
 							case IN_MATCH:
+								if(data.equals("AA")){
+									//TODO: Use ACK to determine character to remove stock from
+								}
+									
 								break;
 							
 							case END_MATCH:
-								currMap = "0x0";
+								cleanupPostMatch();
 								break;
 						}
 					}
@@ -80,6 +86,14 @@ public class DolphinGecko {
 					System.exit(0);
 					break;
 			}
+		}
+	}
+	
+	private void cleanupPostMatch(){
+		//TODO: Send results before 0ing.
+		currMap = "0x0";
+		for(short i = 0; i < characters.length; i++){
+			characters[i] = 0;
 		}
 	}
 	

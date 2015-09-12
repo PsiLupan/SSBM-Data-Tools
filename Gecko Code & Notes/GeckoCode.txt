@@ -2,11 +2,11 @@
 Hook In-Match Stock Changes
 ---------------------------------------------
 80033ce0 - Remove_Stock
-r0 @ 80033d44 = New Stock Count
+r0 after 80033d44 = New Stock Count
 
 Free Registers: r19 - r23
 
-Inject @ 80033d48
+Inject @ 80033d44
 
 CODE:
 
@@ -19,10 +19,10 @@ li r21, 0x19
 stw r22, 0x6814(r16) #start transfer, write to CH1 Param Register
 
 writeByte:
-mr r19, r0 #Move stock from r0 to r19
-slwi r19, r19, 20 #Left Shift by 24, since we don't append an ID
+mr r19, r0 #Move r0 to r19
+slwi r19, r19, 20 #Left Shift by 24, since we append an 0xB
 oris r19, r19, 0xB000		# 0xB0000000 | (OR)
-stw r19, 0x6824(r23) #store r18 into CH1 IMM register
+stw r19, 0x6824(r23) #store r19 into CH1 IMM register
 stw r21, 0x6820(r23) #Set write IMM on CH1 Control Register
 
 exicheckreceivewait:              
@@ -34,8 +34,12 @@ stw    r20, 0x6814(r16) #Write 0 to Param for later reinit
 blr
 
 getStockUpdate:
+li r0, 0xAC
 bl sendByte
-stb r0,0x008E(r4) #Restore old instruction
+mr r0, r31
+bl sendByte
+subi r0, r3, 1
+bl sendByte
 
 #############################################
 Hook Stage Selection on Match Start [SinsOfApathy]
@@ -91,7 +95,7 @@ stw r15, 0x6814(r16) #start transfer, write to CH1 Param Register
 
 writeByte:
 lbz r18, 0xF(r3) #write byte at r3+14 to r18
-slwi r18, r18, 20 #Left Shift by 24, since we don't append an ID
+slwi r18, r18, 20 #Left Shift by 24, since we append an 0xB
 oris r18, r18, 0xB000		# 0xB0000000 | (OR)
 stw r18, 0x6824(r16) #store r18 into CH1 IMM register
 stw r14, 0x6820(r16) #Set write IMM on CH1 Control Register
@@ -106,9 +110,7 @@ blr
 
 getStageID:
 mr r31,r3
-mflr r21
 bl sendByte
-mtlr r21
 
 #############################################
 Hook Character Selections on Match Start [SinsOfApathy]
@@ -145,7 +147,7 @@ stw    r17, 0x6814(r16) #Write 0 to Param for later reinit
 blr
 
 getCharID:
-mr r20, r3 #Move r3 to r21 for storage, since r21 is unused
+mr r20, r3 #Move r3 to r20 for storage, since r20 is unused
 li r3, 0
 lbz r3,7(r30) #Load character ID byte into r3
 bl sendByte
@@ -157,7 +159,7 @@ GECKO CODE
 --------------------------------------------------------
 
 $Game Reporter[SinsOfApathy]
-C216E740 0000000A
+C216E740 00000009
 4800003C 3E00CC00
 39E000D0 39C00019
 91F06814 8A43000F
@@ -166,8 +168,7 @@ C216E740 0000000A
 82306820 72310001
 4082FFF8 92306814
 4E800020 7C7F1B78
-7EA802A6 4BFFFFC1
-7EA803A6 00000000
+4BFFFFC5 00000000
 C2068E9C 0000000B
 4800003C 3E00CC00
 39E000D0 39C00019
@@ -180,3 +181,15 @@ C2068E9C 0000000B
 38600000 887E0007
 4BFFFFBD 7E83A378
 38800008 00000000
+C2033D44 0000000B
+4800003C 3EE0CC00
+3AC000D0 3AA00019
+92D06814 7C130378
+5673A016 6673B000
+92776824 92B76820
+82976820 72940001
+4082FFF8 92906814
+4E800020 380000AC
+4BFFFFC5 7FE0FB78
+4BFFFFBD 3803FFFF
+4BFFFFB5 00000000
